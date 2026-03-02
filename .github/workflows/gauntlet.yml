@@ -1,0 +1,46 @@
+name: The Gauntlet Project
+
+on:
+  pull_requests:
+    branches:
+      - main
+
+
+jobs:
+  the_core_builder:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download the code
+        uses: actions/checkout@v4
+
+      - name: Cache NOde Modules
+        uses: actions/cache@v4
+        with:
+          path: ~/enterprise-deps
+          key: gauntlet-cache
+          restore-keys: gauntlet-cache-backup
+
+      - name: Secure branch
+        run: |
+           echo "System compiled . Password used: ${{ secrets.MASTER_PASSWORD }}" > secure-app.txt
+
+      - name: Save secure branch file
+        uses: actions/upload-artifact@v4
+          with:
+            name: clasified-build
+            path: secure-app.txt
+
+  the_matrix_swarm:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Download secure branch file
+        uses: actions/download-artifact@v4
+        with:
+          name: clasified-build
+
+      - name: Verify secure-app.txt
+        run: cat secure-app.txt
